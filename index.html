@@ -1,5 +1,3 @@
-<audio id="repro" src="" type="audio/mpeg"></audio>
-
 <div>
   <label for="chapter-list">Selecciona el capítulo a reproducir:</label>
   <select id="chapter-list" aria-label="Lista de capítulos"></select>
@@ -7,18 +5,20 @@
   <button id="play-pause" title="Reproducir (Alt+K)" aria-label="Reproducir">Reproducir</button>
 
   <p id="speak-text" onclick="speak(this.textContent);" accesskey="i"></p>
+  <div id="alert" aria-live="assertive"></div>
 
   <button id="backward" title="Retroceder 10 segundos (Alt+J)" aria-label="Retroceder">Retroceder</button>
-
   <button id="forward" title="Avanzar 10 segundos (Alt+L)" aria-label="Avanzar">Avanzar</button>
 
   <button id="volume-up" title="Subir volumen (Alt+U)" aria-label="Subir volumen">Subir volumen</button>
-
   <button id="volume-down" title="Bajar volumen (Alt+O)" aria-label="Bajar volumen">Bajar volumen</button>
-<div id="alert" aria-live="assertive"></div>
+
   <label for="autoplay">si lo deseas, puedes</label>
   <input type="checkbox" id="autoplay" aria-label="Reproducir automáticamente el siguiente capítulo">
 </div>
+
+<audio id="repro" src="" type="audio/mpeg"></audio>
+
 <script>
   const audio = document.getElementById("repro");
   const chapterList = document.getElementById("chapter-list");
@@ -32,6 +32,19 @@
   const chapterValues = Array.from({ length: 100 }, (_, i) => i + 1);
   let currentChapter = 1;
 
+  function setChapter() {
+    currentChapter = chapterList.value;
+    audio.src = `${rootLink}${currentChapter}.m4a`;
+    audio.load();
+    audio.play();
+  }
+
+  function updatePlayPauseButton(title, ariaLabel) {
+    playPauseButton.setAttribute("title", `${title} (Alt+K)`);
+    playPauseButton.setAttribute("aria-label", ariaLabel);
+    playPauseButton.textContent = title;
+  }
+
   function playPause() {
     if (audio.paused) {
       audio.play();
@@ -42,22 +55,9 @@
     }
   }
 
-  function updatePlayPauseButton(title, ariaLabel) {
-    playPauseButton.setAttribute("title", `${title} (Alt+K)`);
-    playPauseButton.setAttribute("aria-label", ariaLabel);
-    playPauseButton.innerHTML = title;
-  }
-
   function skip(direction) {
     audio.currentTime += (direction === "forward" ? 10 : -10);
     audio.currentTime = Math.min(Math.max(audio.currentTime, 0), audio.duration);
-  }
-
-  function setChapter() {
-    currentChapter = chapterList.value;
-    audio.src = `${rootLink}${currentChapter}.m4a`;
-    audio.load();
-    audio.play();
   }
 
   function handleMediaKeys(event) {
@@ -85,6 +85,19 @@
     }
   }
 
+  function setSpeakText() {
+    const speakText = document.getElementById("speak-text");
+    const currentTime = formatTime(audio.currentTime);
+    const duration = formatTime(audio.duration);
+    speakText.textContent = `${currentTime} de ${duration}`;
+  }
+
+  function formatTime(time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  }
+
   for (let chapter of chapterValues) {
     const option = document.createElement("option");
     option.text = `Capítulo ${chapter}`;
@@ -101,6 +114,7 @@
   volumeUpButton.addEventListener("click", () => audio.volume += 0.1);
   volumeDownButton.addEventListener("click", () => audio.volume -= 0.1);
   audio.addEventListener("ended", checkAutoplay);
+  audio.addEventListener("timeupdate", setSpeakText);
 
   document.addEventListener("keydown", function(event) {
     const keyMap = {
@@ -117,17 +131,4 @@
       keyFunction();
     }
   });
-function setSpeakText() {
-  const speakText = document.getElementById("speak-text");
-  const currentTime = formatTime(audio.currentTime);
-  const duration = formatTime(audio.duration);
-  speakText.textContent = `${currentTime} de ${duration}`;
-}
-audio.addEventListener("timeupdate", setSpeakText);
-function formatTime(time) {
-  const minutes = Math.floor(time / 60);
-  const seconds = Math.floor(time % 60);
-  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-}
-
 </script>
