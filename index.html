@@ -1,4 +1,7 @@
 <div>
+  <label for="season-list">Selecciona la temporada:</label>
+  <select id="season-list" aria-label="Lista de temporadas"></select>
+
   <label for="chapter-list">Selecciona el capítulo a reproducir:</label>
   <select id="chapter-list" aria-label="Lista de capítulos"></select>
 
@@ -22,19 +25,30 @@
 <script>
   const audio = document.getElementById("repro");
   const chapterList = document.getElementById("chapter-list");
+  const seasonList = document.getElementById("season-list");
   const playPauseButton = document.getElementById("play-pause");
   const backwardButton = document.getElementById("backward");
   const forwardButton = document.getElementById("forward");
   const volumeUpButton = document.getElementById("volume-up");
   const volumeDownButton = document.getElementById("volume-down");
-  const rootLink = "https://github.com/blindflix3/series1/raw/main/juego-de-mentiras/";
+  const rootLink = "https://raw.githubusercontent.com/blindflix/series1432/main/icarly/";
 
-  const chapterValues = Array.from({ length: 100 }, (_, i) => i + 1);
-  let currentChapter = 1;
+  const seasons = [
+    { name: "Temporada 1", chapters: 25 },
+    { name: "Temporada 2", chapters: 21 },
+    { name: "Temporada 3", chapters: 18 },
+    { name: "Temporada 4", chapters: 10 },
+    { name: "Temporada 5", chapters: 10 },
+    { name: "Temporada 6", chapters: 13 },
+
+    // Agrega las temporadas y la cantidad de capítulos correspondientes
+  ];
 
   function setChapter() {
-    currentChapter = chapterList.value;
-    audio.src = `${rootLink}${currentChapter}.m4a`;
+    const currentChapter = chapterList.value;
+    const currentSeasonIndex = seasonList.selectedIndex;
+    const currentSeason = seasons[currentSeasonIndex].name;
+    audio.src = `${rootLink}${currentSeason.toLowerCase().replace(" ", "-")}/${currentChapter}.m4a`;
     audio.load();
     audio.play();
   }
@@ -78,8 +92,15 @@
 
   function checkAutoplay() {
     if (autoplay.checked) {
-      currentChapter = parseInt(chapterList.value) + 1;
-      currentChapter = currentChapter > chapterList.options.length ? 1 : currentChapter;
+      const currentChapter = parseInt(chapterList.value) + 1;
+      const currentSeasonIndex = seasonList.selectedIndex;
+      let currentSeason = seasons[currentSeasonIndex].name;
+      if (currentChapter > seasons[currentSeasonIndex].chapters) {
+        currentSeasonIndex++;
+        currentSeason = seasons[currentSeasonIndex].name;
+        chapterList.selectedIndex = 0;
+      }
+      seasonList.selectedIndex = currentSeasonIndex;
       chapterList.value = currentChapter;
       setChapter();
     }
@@ -98,37 +119,50 @@
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   }
 
-  for (let chapter of chapterValues) {
+  for (let i = 0; i < seasons.length; i++) {
+    const option = document.createElement("option");
+    option.text = seasons[i].name;
+    seasonList.add(option);
+    if (i === 0) {
+      option.selected = true;
+    }
+  }
+
+  const currentSeasonIndex = seasonList.selectedIndex;
+  const currentSeasonChapters = seasons[currentSeasonIndex].chapters;
+  for (let chapter = 1; chapter <= currentSeasonChapters; chapter++) {
     const option = document.createElement("option");
     option.text = `Capítulo ${chapter}`;
     option.value = chapter;
     chapterList.add(option);
+    if (chapter === 1) {
+      option.selected = true;
+    }
   }
 
-  chapterList.addEventListener("change", setChapter);
-  setChapter();
+  seasonList.addEventListener("change", () => {
+    chapterList.options.length = 0;
+    const currentSeasonIndex = seasonList.selectedIndex;
+    const currentSeasonChapters = seasons[currentSeasonIndex].chapters;
+    for (let chapter = 1; chapter <= currentSeasonChapters; chapter++) {
+      const option = document.createElement("option");
+      option.text = `Capítulo ${chapter}`;
+      option.value = chapter;
+      chapterList.add(option);
+      if (chapter === 1) {
+        option.selected = true;
+      }
+    }
+    setChapter();
+  });
 
+  chapterList.addEventListener("change", setChapter);
   playPauseButton.addEventListener("click", playPause);
   backwardButton.addEventListener("click", () => skip("backward"));
   forwardButton.addEventListener("click", () => skip("forward"));
   volumeUpButton.addEventListener("click", () => audio.volume += 0.1);
   volumeDownButton.addEventListener("click", () => audio.volume -= 0.1);
-  audio.addEventListener("ended", checkAutoplay);
   audio.addEventListener("timeupdate", setSpeakText);
-
-  document.addEventListener("keydown", function(event) {
-    const keyMap = {
-      KeyK: playPause,
-      KeyJ: () => skip("backward"),
-      KeyL: () => skip("forward"),
-      KeyO: () => audio.volume -= 0.1,
-      KeyM: () => audio.muted = !audio.muted,
-      KeyU: () => audio.volume += 0.1
-    };
-    const keyFunction = keyMap[event.code];
-    if (keyFunction) {
-      event.preventDefault();
-      keyFunction();
-    }
-  });
+  audio.addEventListener("ended", checkAutoplay);
+  document.addEventListener("keydown", handleMediaKeys);
 </script>
