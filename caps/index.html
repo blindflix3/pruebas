@@ -140,6 +140,8 @@ nextChapterButton.addEventListener("click", nextChapter);
       KeyK: playPause,
       KeyJ: () => skip("backward"),
       KeyL: () => skip("forward"),
+      KeyP: previousChapter,
+      KeyN: NextChapter,
       KeyO: () => audio.volume -= 0.1,
       KeyM: () => audio.muted = !audio.muted,
       KeyU: () => audio.volume += 0.1
