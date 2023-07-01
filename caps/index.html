@@ -9,8 +9,8 @@
 
   <button id="backward" title="Retroceder 10 segundos (Alt+J)" aria-label="Retroceder">Retroceder</button>
   <button id="forward" title="Avanzar 10 segundos (Alt+L)" aria-label="Avanzar">Avanzar</button>
-<button id="previous-chapter" title="Capítulo anterior (Alt+P)" aria-label="Capítulo anterior">Anterior</button>
-<button id="next-chapter" title="Capítulo siguiente (Alt+N)" aria-label="Capítulo siguiente">Siguiente</button>
+<button id="previous-chapter" title="Capítulo anterior (Alt+p)" aria-label="Capítulo anterior">Anterior</button>
+<button id="next-chapter" title="Capítulo siguiente (Alt+n)" aria-label="Capítulo siguiente">Siguiente</button>
 
   <button id="volume-up" title="Subir volumen (Alt+U)" aria-label="Subir volumen">Subir volumen</button>
   <button id="volume-down" title="Bajar volumen (Alt+O)" aria-label="Bajar volumen">Bajar volumen</button>
@@ -128,6 +128,15 @@ function nextChapter() {
   forwardButton.addEventListener("click", () => skip("forward"));
 const previousChapterButton = document.getElementById("previous-chapter");
 const nextChapterButton = document.getElementById("next-chapter");
+
+document.addEventListener("keydown", function(event) {
+  if (event.altKey && event.code === "KeyN") {
+    nextChapterButton.click();
+  } else if (event.altKey && event.code === "KeyP") {
+    previousChapterButton.click();
+  }
+});
+  
 previousChapterButton.addEventListener("click", previousChapter);
 nextChapterButton.addEventListener("click", nextChapter);
   volumeUpButton.addEventListener("click", () => audio.volume += 0.1);
@@ -140,8 +149,6 @@ nextChapterButton.addEventListener("click", nextChapter);
       KeyK: playPause,
       KeyJ: () => skip("backward"),
       KeyL: () => skip("forward"),
-      KeyP: () => previousChapter,
-      KeyN: () => NextChapter,
       KeyO: () => audio.volume -= 0.1,
       KeyM: () => audio.muted = !audio.muted,
       KeyU: () => audio.volume += 0.1
